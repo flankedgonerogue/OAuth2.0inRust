@@ -1,0 +1,18 @@
+meta {
+  name: Authorize
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{BASE_URL}}/authorize?redirect_uri=http://localhost:8080&response_type=query&client_id=1&state={{STATE}}
+  body: json
+  auth: none
+}
+
+params:query {
+  redirect_uri: http://localhost:8080
+  response_type: query
+  client_id: 1
+  state: {{STATE}}
+}

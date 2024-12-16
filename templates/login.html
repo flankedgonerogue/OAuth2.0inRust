@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 2rem;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: #eaf2f8;
+            border: 1px solid #d1e1e8;
+            border-radius: 4px;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.8rem;
+        }
+        input[type="email"], input[type="password"] {
+            width: 100%;
+            padding: 0.8rem;
+            margin-top: 0.2rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 0.7rem 1.5rem;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Login</h1>
+    <p>Proceed to log in for <strong>{{ client_name }}</strong>!</p>
+    <h2>Scopes Requested:</h2>
+    <ul>
+        {% for scope in scope_list.split_whitespace() %}
+        <li>{{ scope }}</li>
+        {% endfor %}
+    </ul>
+    <form action="/login" method="post">
+        <input type="hidden" name="request_id" value="{{ request_id }}">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+
+        <button type="submit">Login</button>
+    </form>
+</div>
+</body>
+</html>
