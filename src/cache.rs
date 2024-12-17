@@ -63,3 +63,12 @@ pub fn get_client_and_request_to_cache(request_id: &String) -> (AuthorizeRequest
         serde_json::from_str(&client_data).unwrap(),
     )
 }
+
+pub fn store_auth_code_and_scope_to_cache(user_id: &u32, client_id: &str, code: &str, scopes: &str) {
+    let mut con = get_redis_connection();
+    
+    let _: String = con.set(format!("AUTH_CODE_USER_{}_CLIENT_{}", user_id, client_id), code).expect("Expected to insert auth code into cache");
+    let _: String = con.set(format!("AUTH_SCOPES_USER_{}_CLIENT_{}", user_id, client_id), scopes).expect("Expected to insert auth scopes into cache");
+    
+    println!("Saved auth details for user {} and client {}", user_id, client_id);
+}

@@ -78,3 +78,10 @@ impl<'a> LoginRequestData {
         })
     }
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct User {
+    pub id: u32,
+    pub email: String,
+    pub password: String
+}
