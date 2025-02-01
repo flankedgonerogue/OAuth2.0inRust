@@ -5,7 +5,7 @@ meta {
 }
 
 get {
-  url: http://localhost:8080/authorize?redirect_uri=http://localhost:8080/callback&response_type=code&client_id=1&state=123&scope=read:email
+  url: http://localhost:8080/authorize?redirect_uri=http://localhost:8080/callback&response_type=code&client_id=1&state=1234565&scope=read:email
   body: json
   auth: none
 }
@@ -14,6 +14,6 @@ params:query {
   redirect_uri: http://localhost:8080/callback
   response_type: code
   client_id: 1
-  state: 123
+  state: 1234565
   scope: read:email
 }

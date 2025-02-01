@@ -10,8 +10,6 @@ use validator::{ValidateRegex, ValidateUrl};
 
 #[axum::debug_handler]
 pub async fn serve_authorization(Query(params): Query<HashMap<String, String>>) -> Response {
-    println!("params: {:?}", params);
-
     // Create RequestData struct from query parameters
     let request_data = match AuthorizeRequestData::new(&params) {
         Some(data) => data,

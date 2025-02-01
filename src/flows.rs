@@ -1,10 +1,9 @@
-use crate::cache::add_client_and_request_to_cache;
-use crate::database::get_client_data_in_db;
 use crate::errors::{
     database_error, invalid_client_error, invalid_redirect_uri_error, invalid_scope_error,
 };
 use crate::pages::get_login_html;
-use crate::storage::{check_client_id, AuthorizeRequestData};
+use crate::storage::{check_client_id, get_client_data, AuthorizeRequestData};
+use crate::GLOBAL_CACHE;
 use axum::response::{IntoResponse, Response};
 use rand::random;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -16,11 +15,10 @@ pub async fn authorization_code_flow(request_data: &AuthorizeRequestData) -> Res
     }
 
     // Get the client data
-    let client_data = get_client_data_in_db(request_data.client_id.parse::<u32>().unwrap()).await;
-    if client_data.is_none() {
-        return database_error(&request_data.redirect_uri, request_data.state.as_ref());
-    }
-    let client_data = client_data.unwrap();
+    let client_data = match get_client_data(request_data.client_id.as_str()).await {
+        Some(data) => data,
+        None => return database_error(&request_data.redirect_uri, request_data.state.as_ref()),
+    };
 
     // Match the redirect uri with allowed ones
     if !client_data
@@ -41,7 +39,10 @@ pub async fn authorization_code_flow(request_data: &AuthorizeRequestData) -> Res
 
     // Generate a request id using a random and the current timestamp
     let request_id = generate_request_id();
-    add_client_and_request_to_cache(&request_id, request_data, &client_data);
+    GLOBAL_CACHE
+        .get()
+        .unwrap()
+        .set_request(&request_id, request_data);
 
     get_login_html(client_data.name.as_str(), &request_id, &request_data.scope).into_response()
 }

@@ -1,24 +1,67 @@
-use crate::cache::{add_client_id_to_cache, check_client_id_in_cache};
-use crate::database::check_client_id_in_db;
+pub(crate) mod cache;
+pub(crate) mod database;
+
 use serde::{Deserialize, Serialize};
 
-pub async fn check_client_id(client_id: &String) -> bool {
-    println!("Checking for client id {} in cache", client_id);
+pub async fn check_client_id(client_id: &str) -> bool {
+    debug!("Checking for client ID {} in cache", client_id);
 
-    if check_client_id_in_cache(client_id) {
-        println!("Found client id {} in cache", client_id);
-        return true;
+    // Check cache first
+    if let Some(cache) = GLOBAL_CACHE.get() {
+        if cache.is_client_id_present(client_id) {
+            debug!("Found client ID {} in cache", client_id);
+            return true;
+        }
+    } else {
+        error!("Cache is not initialized!");
     }
 
-    println!("Checking for client id {} in DB", client_id);
+    debug!("Client ID {} not in cache. Checking database...", client_id);
 
-    if check_client_id_in_db(client_id.parse::<u32>().unwrap()).await {
-        add_client_id_to_cache(client_id);
-        println!("Found client id {} in database", client_id);
-        return true;
+    // Parse client_id to u32
+    let client_id_parsed = match client_id.parse::<u32>() {
+        Ok(id) => id,
+        Err(_) => {
+            error!("Invalid client ID format: {}", client_id);
+            return false;
+        }
+    };
+
+    // Query database
+    if let Some(database) = GLOBAL_DATABASE.get() {
+        if database.find_client(&client_id_parsed).await {
+            // Add to cache if found in the database
+            if let Some(cache) = GLOBAL_CACHE.get() {
+                cache.add_client_id(client_id);
+                debug!("Found client ID {} in database", client_id);
+            }
+            return true;
+        }
+    } else {
+        error!("Database is not initialized!");
     }
 
+    debug!("Client ID {} not found", client_id);
     false
+}
+
+pub async fn get_client_data(client_id: &str) -> Option<Client> {
+    let data_from_cache = GLOBAL_CACHE.get().unwrap().get_client(client_id);
+    if let Some(data) = data_from_cache {
+        Some(data)
+    } else {
+        let data = GLOBAL_DATABASE
+            .get()
+            .unwrap()
+            .get_client(&client_id.parse::<u32>().unwrap())
+            .await;
+        if let Some(data) = data {
+            GLOBAL_CACHE.get().unwrap().set_client(&data);
+            Some(data)
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -27,8 +70,11 @@ pub struct Client {
     pub name: String,
     pub allowed_scopes: Vec<String>,
     pub redirect_uris: Vec<String>,
+    pub secret: String,
 }
 
+use crate::{GLOBAL_CACHE, GLOBAL_DATABASE};
+use log::{debug, error};
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -83,5 +129,5 @@ impl<'a> LoginRequestData {
 pub struct User {
     pub id: u32,
     pub email: String,
-    pub password: String
+    pub password: String,
 }
